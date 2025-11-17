@@ -1166,6 +1166,10 @@ export const providers: ProvidersMap = {
       return createOpenRouter({
         apiKey,
         baseURL,
+        headers: {
+          'X-Title': 'Neovate Code',
+          'HTTP-Referer': 'https://neovateai.dev/',
+        },
       }).chat(name);
     },
   },
