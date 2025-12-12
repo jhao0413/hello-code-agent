@@ -45,12 +45,18 @@ type CommitState =
   | { phase: 'displaying'; data: GenerateCommitData }
   | { phase: 'editing'; data: GenerateCommitData; editedMessage: string }
   | { phase: 'editingBranch'; data: GenerateCommitData; editedBranch: string }
-  | { phase: 'executing'; action: CommitAction; data: GenerateCommitData }
-  | { phase: 'success'; message: string }
+  | {
+      phase: 'executing';
+      action: CommitAction;
+      data: GenerateCommitData;
+      outputLines?: string[];
+    }
+  | { phase: 'success'; message: string; outputLines?: string[] }
   | {
       phase: 'completed';
       data: GenerateCommitData;
       result: ExecutionResult;
+      outputLines?: string[];
     }
   | { phase: 'error'; error: string; recoveryAction?: () => void };
 
@@ -77,6 +83,8 @@ interface CommitOptions {
 // Main UI Component
 // ============================================================================
 
+const MAX_OUTPUT_LINES = 50;
+
 const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
   const [state, setState] = useState<CommitState>({ phase: 'validating' });
   const [shouldExit, setShouldExit] = useState(false);
@@ -87,6 +95,26 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
       process.exit(0);
     }
   }, [shouldExit]);
+
+  // Subscribe to git output events
+  useEffect(() => {
+    const handleGitOutput = (data: { line: string; stream: string }) => {
+      setState((prev) => {
+        if (prev.phase !== 'executing') return prev;
+        const currentLines = prev.outputLines || [];
+        const newLines = [...currentLines, data.line].slice(-MAX_OUTPUT_LINES);
+        return { ...prev, outputLines: newLines };
+      });
+    };
+
+    messageBus.onEvent('git.commit.output', handleGitOutput);
+    messageBus.onEvent('git.push.output', handleGitOutput);
+
+    return () => {
+      messageBus.offEvent('git.commit.output', handleGitOutput);
+      messageBus.offEvent('git.push.output', handleGitOutput);
+    };
+  }, [messageBus]);
 
   // Handle keyboard input for global actions
   useInput((_input, key) => {
@@ -118,7 +146,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
 
       // Handle checkout (create branch) first
       if (options.checkout) {
-        setState({ phase: 'executing', action: 'checkout', data });
+        setState({
+          phase: 'executing',
+          action: 'checkout',
+          data,
+          outputLines: [],
+        });
         const branchResult = await messageBus.request('git.createBranch', {
           cwd,
           name: data.branchName,
@@ -136,7 +169,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
 
       // Commit changes
       if (options.commit || options.checkout) {
-        setState({ phase: 'executing', action: 'commit', data });
+        setState({
+          phase: 'executing',
+          action: 'commit',
+          data,
+          outputLines: [],
+        });
         const commitResult = await messageBus.request('git.commit', {
           cwd,
           message: commitMessage,
@@ -160,9 +198,14 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
         }
         result.committed = true;
 
-        // Push if requested
+        // Push if requested - preserve commit output when transitioning
         if (options.push) {
-          setState({ phase: 'executing', action: 'push', data });
+          setState((prev) => ({
+            phase: 'executing',
+            action: 'push',
+            data,
+            outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+          }));
           const pushResult = await messageBus.request('git.push', { cwd });
 
           if (!pushResult.success) {
@@ -193,11 +236,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
       }
 
       // Show completed state with detailed info
-      setState({
+      setState((prev) => ({
         phase: 'completed',
         data,
         result,
-      });
+        outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+      }));
 
       // Exit after showing results
       setTimeout(() => setShouldExit(true), 1500);
@@ -362,7 +406,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
         }
 
         case 'commit': {
-          setState({ phase: 'executing', action: 'commit', data });
+          setState({
+            phase: 'executing',
+            action: 'commit',
+            data,
+            outputLines: [],
+          });
           const result = await messageBus.request('git.commit', {
             cwd,
             message: data.commitMessage,
@@ -370,10 +419,11 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
           });
 
           if (result.success) {
-            setState({
+            setState((prev) => ({
               phase: 'success',
               message: 'Changes committed successfully!',
-            });
+              outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+            }));
             setTimeout(() => setShouldExit(true), 1000);
           } else {
             const error = result.error || 'Commit failed';
@@ -385,18 +435,25 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
                 phase: 'error',
                 error: `${error}\n\nHint: Use --no-verify (-n) to skip pre-commit hooks.`,
                 recoveryAction: async () => {
-                  setState({ phase: 'executing', action: 'commit', data });
+                  setState({
+                    phase: 'executing',
+                    action: 'commit',
+                    data,
+                    outputLines: [],
+                  });
                   const retryResult = await messageBus.request('git.commit', {
                     cwd,
                     message: data.commitMessage,
                     noVerify: true,
                   });
                   if (retryResult.success) {
-                    setState({
+                    setState((prev) => ({
                       phase: 'success',
                       message:
                         'Changes committed successfully (hooks skipped)!',
-                    });
+                      outputLines:
+                        prev.phase === 'executing' ? prev.outputLines : [],
+                    }));
                     setTimeout(() => setShouldExit(true), 1000);
                   } else {
                     setState({
@@ -415,7 +472,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
 
         case 'push': {
           // First commit
-          setState({ phase: 'executing', action: 'commit', data });
+          setState({
+            phase: 'executing',
+            action: 'commit',
+            data,
+            outputLines: [],
+          });
           const commitResult = await messageBus.request('git.commit', {
             cwd,
             message: data.commitMessage,
@@ -430,15 +492,21 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
             return;
           }
 
-          // Then push
-          setState({ phase: 'executing', action: 'push', data });
+          // Then push - preserve commit output when transitioning
+          setState((prev) => ({
+            phase: 'executing',
+            action: 'push',
+            data,
+            outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+          }));
           const pushResult = await messageBus.request('git.push', { cwd });
 
           if (pushResult.success) {
-            setState({
+            setState((prev) => ({
               phase: 'success',
               message: 'Changes committed and pushed successfully!',
-            });
+              outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+            }));
             setTimeout(() => setShouldExit(true), 1000);
           } else {
             const error = pushResult.error || 'Push failed';
@@ -456,7 +524,12 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
 
         case 'checkout': {
           // Create branch
-          setState({ phase: 'executing', action: 'checkout', data });
+          setState({
+            phase: 'executing',
+            action: 'checkout',
+            data,
+            outputLines: [],
+          });
           const branchResult = await messageBus.request('git.createBranch', {
             cwd,
             name: data.branchName,
@@ -480,10 +553,11 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
           });
 
           if (commitResult.success) {
-            setState({
+            setState((prev) => ({
               phase: 'success',
               message: `Branch '${branchName}' created and changes committed!`,
-            });
+              outputLines: prev.phase === 'executing' ? prev.outputLines : [],
+            }));
             setTimeout(() => setShouldExit(true), 1000);
           } else {
             setState({
@@ -654,7 +728,7 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
       {state.phase === 'executing' && (
         <Box flexDirection="column">
           <CommitResultCard {...state.data} />
-          <Box marginTop={1}>
+          <Box marginTop={1} flexDirection="column">
             <Text color="yellow">
               ⏳{' '}
               {state.action === 'commit'
@@ -665,14 +739,32 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
                     ? 'Creating branch...'
                     : 'Executing...'}
             </Text>
+            {state.outputLines && state.outputLines.length > 0 && (
+              <Box flexDirection="column" marginTop={1} paddingLeft={2}>
+                {state.outputLines.map((line, idx) => (
+                  <Text key={`output-${idx}-${line.slice(0, 20)}`} dimColor>
+                    {line}
+                  </Text>
+                ))}
+              </Box>
+            )}
           </Box>
         </Box>
       )}
 
       {/* Success Phase */}
       {state.phase === 'success' && (
-        <Box>
+        <Box flexDirection="column">
           <Text color="green">✅ {state.message}</Text>
+          {state.outputLines && state.outputLines.length > 0 && (
+            <Box flexDirection="column" marginTop={1} paddingLeft={2}>
+              {state.outputLines.map((line, idx) => (
+                <Text key={`output-${idx}-${line.slice(0, 20)}`} dimColor>
+                  {line}
+                </Text>
+              ))}
+            </Box>
+          )}
         </Box>
       )}
 
@@ -717,6 +809,15 @@ const CommitUI: React.FC<CommitUIProps> = ({ messageBus, cwd, options }) => {
               )}
             </Box>
           </Box>
+          {state.outputLines && state.outputLines.length > 0 && (
+            <Box flexDirection="column" marginTop={1} paddingLeft={2}>
+              {state.outputLines.map((line, idx) => (
+                <Text key={`output-${idx}-${line.slice(0, 20)}`} dimColor>
+                  {line}
+                </Text>
+              ))}
+            </Box>
+          )}
         </Box>
       )}
 

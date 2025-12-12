@@ -1300,7 +1300,9 @@ ${diff}
       const { cwd, message, noVerify = false } = data;
       try {
         const { gitCommit } = await import('./utils/git');
-        await gitCommit(cwd, message, noVerify);
+        await gitCommit(cwd, message, noVerify, (line, stream) => {
+          this.messageBus.emitEvent('git.commit.output', { line, stream });
+        });
         return { success: true };
       } catch (error: any) {
         return {
@@ -1324,7 +1326,9 @@ ${diff}
           };
         }
 
-        await gitPush(cwd);
+        await gitPush(cwd, (line, stream) => {
+          this.messageBus.emitEvent('git.push.output', { line, stream });
+        });
         return { success: true };
       } catch (error: any) {
         return {

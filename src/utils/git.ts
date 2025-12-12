@@ -124,30 +124,165 @@ export async function stageAll(cwd: string): Promise<void> {
 
 /**
  * Commit staged changes with a message
+ * @param cwd - Working directory
+ * @param message - Commit message
+ * @param skipHooks - Skip pre-commit hooks
+ * @param onOutput - Optional callback for streaming output
  */
 export async function gitCommit(
   cwd: string,
   message: string,
   skipHooks = false,
+  onOutput?: (line: string, stream: 'stdout' | 'stderr') => void,
 ): Promise<void> {
   const args = ['commit', '-m', message];
   if (skipHooks) {
     args.push('--no-verify');
   }
-  const { code, stderr } = await gitExec(cwd, args);
-  if (code !== 0) {
-    throw new Error(stderr || 'Commit failed');
+
+  // If no output callback, use the simple exec approach
+  if (!onOutput) {
+    const { code, stderr } = await gitExec(cwd, args);
+    if (code !== 0) {
+      throw new Error(stderr || 'Commit failed');
+    }
+    return;
   }
+
+  // Use spawn for streaming output
+  const { spawn } = await import('child_process');
+
+  return new Promise((resolve, reject) => {
+    const gitProcess = spawn('git', args, { cwd });
+    let stderr = '';
+
+    const processOutput = (
+      data: Buffer,
+      stream: 'stdout' | 'stderr',
+      buffer: string,
+    ): string => {
+      const text = buffer + data.toString();
+      const lines = text.split('\n');
+      // Keep the last incomplete line in buffer
+      const incomplete = lines.pop() || '';
+      for (const line of lines) {
+        if (line.trim()) {
+          onOutput(line, stream);
+        }
+      }
+      return incomplete;
+    };
+
+    let stdoutBuffer = '';
+    let stderrBuffer = '';
+
+    gitProcess.stdout?.on('data', (data: Buffer) => {
+      stdoutBuffer = processOutput(data, 'stdout', stdoutBuffer);
+    });
+
+    gitProcess.stderr?.on('data', (data: Buffer) => {
+      stderr += data.toString();
+      stderrBuffer = processOutput(data, 'stderr', stderrBuffer);
+    });
+
+    gitProcess.on('error', (error) => {
+      reject(error);
+    });
+
+    gitProcess.on('close', (code) => {
+      // Flush any remaining buffered content
+      if (stdoutBuffer.trim()) {
+        onOutput(stdoutBuffer, 'stdout');
+      }
+      if (stderrBuffer.trim()) {
+        onOutput(stderrBuffer, 'stderr');
+      }
+
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(stderr || 'Commit failed'));
+      }
+    });
+  });
 }
 
 /**
  * Push changes to remote
+ * @param cwd - Working directory
+ * @param onOutput - Optional callback for streaming output
  */
-export async function gitPush(cwd: string): Promise<void> {
-  const { code, stderr } = await gitExec(cwd, ['push']);
-  if (code !== 0) {
-    throw new Error(stderr || 'Push failed');
+export async function gitPush(
+  cwd: string,
+  onOutput?: (line: string, stream: 'stdout' | 'stderr') => void,
+): Promise<void> {
+  // If no output callback, use the simple exec approach
+  if (!onOutput) {
+    const { code, stderr } = await gitExec(cwd, ['push']);
+    if (code !== 0) {
+      throw new Error(stderr || 'Push failed');
+    }
+    return;
   }
+
+  // Use spawn for streaming output with progress
+  const { spawn } = await import('child_process');
+
+  return new Promise((resolve, reject) => {
+    // Use --progress to ensure git outputs progress info
+    const gitProcess = spawn('git', ['push', '--progress'], { cwd });
+    let stderr = '';
+
+    const processOutput = (
+      data: Buffer,
+      stream: 'stdout' | 'stderr',
+      buffer: string,
+    ): string => {
+      const text = buffer + data.toString();
+      // Git progress uses \r for in-place updates, handle both \n and \r
+      const lines = text.split(/[\r\n]/);
+      // Keep the last incomplete line in buffer
+      const incomplete = lines.pop() || '';
+      for (const line of lines) {
+        if (line.trim()) {
+          onOutput(line, stream);
+        }
+      }
+      return incomplete;
+    };
+
+    let stdoutBuffer = '';
+    let stderrBuffer = '';
+
+    gitProcess.stdout?.on('data', (data: Buffer) => {
+      stdoutBuffer = processOutput(data, 'stdout', stdoutBuffer);
+    });
+
+    gitProcess.stderr?.on('data', (data: Buffer) => {
+      stderr += data.toString();
+      stderrBuffer = processOutput(data, 'stderr', stderrBuffer);
+    });
+
+    gitProcess.on('error', (error) => {
+      reject(error);
+    });
+
+    gitProcess.on('close', (code) => {
+      // Flush any remaining buffered content
+      if (stdoutBuffer.trim()) {
+        onOutput(stdoutBuffer, 'stdout');
+      }
+      if (stderrBuffer.trim()) {
+        onOutput(stderrBuffer, 'stderr');
+      }
+
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(new Error(stderr || 'Push failed'));
+      }
+    });
+  });
 }
 
 /**
