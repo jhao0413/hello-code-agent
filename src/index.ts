@@ -142,7 +142,7 @@ Examples:
 Commands:
   config                        Manage configuration
   commit                        Commit changes to the repository
-  log                           View session logs in HTML
+  log [file]                    View session logs in HTML (optional file path)
   mcp                           Manage MCP servers
   run                           Run a command
   update                        Check for and apply updates
@@ -386,7 +386,8 @@ export async function runNeovate(opts: {
       }
       case 'log': {
         const { runLog } = await import('./commands/log');
-        await runLog(context);
+        const logFilePath = argv._[1] ? String(argv._[1]) : undefined;
+        await runLog(context, logFilePath);
         break;
       }
       case 'run': {
