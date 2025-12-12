@@ -16,10 +16,10 @@ import type { ApprovalCategory, ToolUse } from './tool';
 // ============================================================================
 
 /** Standard success response without data */
-type SuccessResponse = { success: boolean };
+type SuccessResponse = { success: true };
 
 /** Standard error response */
-type ErrorResponse = { success: boolean; error: string };
+type ErrorResponse = { success: false; error: string };
 
 // ============================================================================
 // Config Handlers
