@@ -1,3 +1,13 @@
+## 0.20.1
+
+`2025-12-15`
+
+- refactor: rename and reorganize model creators by [@sorrycc](https://github.com/sorrycc)
+- fix: add missing plugins configuration to commands by [@阿平](https://github.com/阿平) in [#528](https://github.com/umijs/takumi/pull/528)
+- fix: add plugins to context and pass to prompts by [@xierenhong](https://github.com/xierenhong)
+- feat: change API key rotation to random selection by [@sorrycc](https://github.com/sorrycc)
+
+
 ## 0.20.0
 
 `2025-12-15`
