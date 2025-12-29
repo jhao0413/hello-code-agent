@@ -1,5 +1,7 @@
 # CONTRIBUTING
 
+For development workflow and best practices, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ## Prepare
 
 Setup the API keys for the LLMs providers, use the env variables in your bashrc/zshrc/fishrc files or use `/login` the select a provider and enter the API Key.
