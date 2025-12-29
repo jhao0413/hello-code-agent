@@ -54,7 +54,7 @@ When designing features, align with [Claude Code](https://docs.anthropic.com/en/
 
 When making UI changes in the terminal interface:
 
-- Consider the Desktop application implementation
+- Consider the [Desktop application](https://github.com/neovateai/neovate-code-desktop) implementation
 - Ensure changes work well in both CLI and Desktop contexts
 - Coordinate with the Desktop team if needed
 
