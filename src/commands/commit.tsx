@@ -10,6 +10,7 @@ import {
   CommitActionSelector,
 } from '../ui/CommitActionSelector';
 import { CommitResultCard } from '../ui/CommitResultCard';
+import { TerminalSizeProvider } from '../ui/TerminalSizeContext';
 import TextInput from '../ui/TextInput';
 
 // ============================================================================
@@ -1394,11 +1395,13 @@ export async function runCommit(context: Context) {
 
     // Render the UI
     render(
-      <CommitUI
-        messageBus={uiMessageBus}
-        cwd={context.cwd}
-        options={options}
-      />,
+      <TerminalSizeProvider>
+        <CommitUI
+          messageBus={uiMessageBus}
+          cwd={context.cwd}
+          options={options}
+        />
+      </TerminalSizeProvider>,
       {
         patchConsole: true,
         exitOnCtrlC: true,

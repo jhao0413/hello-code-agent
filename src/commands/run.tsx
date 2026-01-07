@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { Context } from '../context';
 import { DirectTransport, MessageBus } from '../messageBus';
 import { NodeBridge } from '../nodeBridge';
+import { TerminalSizeProvider } from '../ui/TerminalSizeContext';
 import TextInput from '../ui/TextInput';
 import { sanitizeAIResponse } from '../utils/sanitizeAIResponse';
 
@@ -863,12 +864,14 @@ export async function runRun(context: Context) {
 
     // Render the UI
     render(
-      <RunUI
-        messageBus={uiMessageBus}
-        cwd={context.cwd}
-        options={options}
-        initialPrompt={initialPrompt?.trim()}
-      />,
+      <TerminalSizeProvider>
+        <RunUI
+          messageBus={uiMessageBus}
+          cwd={context.cwd}
+          options={options}
+          initialPrompt={initialPrompt?.trim()}
+        />
+      </TerminalSizeProvider>,
       {
         patchConsole: true,
         exitOnCtrlC: true,
