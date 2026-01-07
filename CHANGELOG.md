@@ -1,3 +1,10 @@
+## 0.22.9
+
+`2026-01-07`
+
+- feat: prevent code execution in brainstorm command by [@阿平](https://github.com/阿平) in [#635](https://github.com/umijs/takumi/pull/635)
+
+
 ## 0.22.8
 
 `2026-01-07`
