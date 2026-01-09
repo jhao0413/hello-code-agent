@@ -74,8 +74,13 @@ export function shellExecute(
   onOutputEvent?: (event: ShellOutputEvent) => void,
 ): ShellExecutionHandle {
   const isWindows = os.platform() === 'win32';
-  const shell = isWindows ? 'cmd.exe' : 'bash';
-  const shellArgs = [isWindows ? '/c' : '-c', commandToExecute];
+  const shell = isWindows ? 'cmd.exe' : process.env.SHELL || '/bin/bash';
+  const isFish = !isWindows && shell.endsWith('/fish');
+  const shellArgs = isWindows
+    ? ['/c', commandToExecute]
+    : isFish
+      ? ['-l', '-c', commandToExecute]
+      : ['-il', '-c', commandToExecute];
 
   const child = spawn(shell, shellArgs, {
     cwd,
