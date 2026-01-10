@@ -236,7 +236,7 @@ async function main(): Promise<void> {
     await exec(['git', 'commit', '-m', `release: ${pkg.version}`, '-n']);
   }
 
-  const gitTag = `v${pkg.version}`;
+  const gitTag = pkg.version;
   if (publishTag === 'latest') {
     log(`Creating git tag ${gitTag}...`);
     if (!args.dryRun) {
