@@ -5,7 +5,7 @@ description: Generate release share note for latest release with Chinese transla
 
 Generate a release share note for the latest release of neovate-code:
 
-1. Fetch the latest release from https://github.com/neovateai/neovate-code/releases
+1. Fetch the latest release from https://api.github.com/repos/neovateai/neovate-code/releases/latest
 2. Extract the Highlights section
 3. Translate the Highlights to Chinese directly without adding your own interpretation or additional changes
 4. Don't summarize the highlights, just translate them directly
@@ -21,4 +21,4 @@ Generate a release share note for the latest release of neovate-code:
 详见 https://github.com/neovateai/neovate-code/releases/tag/<version>
 ```
 
-5. Copy the final output to clipboard using `pbcopy`
+6. Copy the final output to clipboard using `pbcopy`
