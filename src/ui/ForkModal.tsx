@@ -52,6 +52,7 @@ export function ForkModal({ messages, onSelect, onClose }: ForkModalProps) {
         .map((part) => part.text);
       text = textParts.join(' ');
     }
+    text = text.replace(/\n+/g, ' ').replace(/ +/g, ' ').trim();
     return text.length > 80 ? text.slice(0, 80) + '...' : text;
   };
 
