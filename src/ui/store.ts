@@ -1168,6 +1168,14 @@ export const useAppStore = create<AppStore>()(
           contentText = textParts.join('');
         }
 
+        // Extract bash-input content if present
+        const bashInputMatch = contentText.match(
+          /<bash-input>([\s\S]*?)<\/bash-input>/,
+        );
+        if (bashInputMatch) {
+          contentText = bashInputMatch[1];
+        }
+
         // Update store state
         set({
           messages: filteredMessages,
