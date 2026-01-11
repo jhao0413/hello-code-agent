@@ -1198,6 +1198,26 @@ const openaiModelCreator = (
   ).chat(name);
 };
 
+const openaiModelResponseCreator = (
+  name: string,
+  provider: Provider,
+): LanguageModelV2 => {
+  if (provider.id !== 'openai') {
+    assert(provider.api, `Provider ${provider.id} must have an api`);
+  }
+  const baseURL = getProviderBaseURL(provider);
+  const apiKey = getProviderApiKey(provider);
+  return createOpenAI(
+    withProxyConfig(
+      {
+        baseURL,
+        apiKey,
+      },
+      provider,
+    ),
+  ).responses(name);
+};
+
 export const providers: ProvidersMap = {
   'github-copilot': {
     id: 'github-copilot',
@@ -1923,18 +1943,35 @@ export const providers: ProvidersMap = {
     id: 'modelwatch',
     env: ['MODELWATCH_API_KEY'],
     name: 'ModelWatch',
-    api: 'http://api.modelwatch.dev/antigravity/v1/',
-    doc: 'https://api.modelwatch.dev/',
+    api: 'https://hub.modelwatch.dev/v1/',
+    doc: 'https://hub.modelwatch.dev/',
     models: {
+      'glm-4.7': models['glm-4.7'],
       'gemini-2.5-flash': models['gemini-2.5-flash'],
       'gemini-3-flash': models['gemini-3-flash-preview'],
       'gemini-3-pro-preview': models['gemini-3-pro-preview'],
       'claude-4-5-sonnet': models['claude-4-5-sonnet'],
       'claude-haiku-4-5': models['claude-haiku-4-5'],
       'claude-opus-4-5': models['claude-opus-4-5'],
+      'gpt-5.1': models['gpt-5.1'],
+      'gpt-5.1-codex-max': models['gpt-5.1-codex-max'],
+      'gpt-5.1-codex': models['gpt-5.1-codex'],
+      'gpt-5.1-codex-mini': models['gpt-5.1-codex-mini'],
+      'gpt-5.2': models['gpt-5.2'],
+      'gpt-5.2-codex': models['gpt-5.2-codex'],
     },
-    createModelType: 'anthropic',
-    createModel: defaultAnthropicModelCreator,
+    createModel: (name, provider) => {
+      if (name.startsWith('claude-') || name.startsWith('gemini-')) {
+        return defaultAnthropicModelCreator(name, provider);
+      }
+      if (name.startsWith('gpt-')) {
+        return openaiModelResponseCreator(name, provider);
+      }
+      if (name === 'glm-4.7') {
+        name = 'zai-glm-4.7';
+      }
+      return defaultModelCreator(name, provider);
+    },
   },
 };
 

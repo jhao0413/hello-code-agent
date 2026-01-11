@@ -54,7 +54,23 @@ export function getThinkingConfig(
     };
   }
 
-  if (model.provider.createModelType === 'anthropic' && model.model.reasoning) {
+  if (model.provider.id === 'modelwatch' && model.model.id.startsWith('gpt-')) {
+    return {
+      providerOptions: {
+        openai: {
+          reasoningEffort: reasoningEffort,
+          reasoningSummary: 'detailed',
+        },
+      },
+    };
+  }
+
+  if (
+    (model.provider.id === 'modelwatch' &&
+      model.model.id.startsWith('claude-')) ||
+    model.model.id.startsWith('gemini-') ||
+    (model.provider.createModelType === 'anthropic' && model.model.reasoning)
+  ) {
     return {
       providerOptions: {
         anthropic: {
