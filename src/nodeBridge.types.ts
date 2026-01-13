@@ -801,6 +801,19 @@ type UtilsGetPathsOutput = {
   };
 };
 
+type UtilsSearchPathsInput = {
+  cwd: string;
+  query: string;
+  maxResults?: number;
+};
+type UtilsSearchPathsOutput = {
+  success: boolean;
+  data: {
+    paths: string[];
+    truncated: boolean;
+  };
+};
+
 type UtilsTelemetryInput = {
   cwd: string;
   name: string;
@@ -1091,6 +1104,10 @@ export type HandlerMap = {
     output: UtilsSummarizeMessageOutput;
   };
   'utils.getPaths': { input: UtilsGetPathsInput; output: UtilsGetPathsOutput };
+  'utils.searchPaths': {
+    input: UtilsSearchPathsInput;
+    output: UtilsSearchPathsOutput;
+  };
   'utils.telemetry': { input: UtilsTelemetryInput; output: SuccessResponse };
   'utils.files.list': {
     input: UtilsFilesListInput;

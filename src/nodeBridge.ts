@@ -2466,6 +2466,27 @@ ${diff}
       };
     });
 
+    this.messageBus.registerHandler('utils.searchPaths', async (data) => {
+      const { cwd, query, maxResults = 100 } = data;
+      const context = await this.getContext(cwd);
+
+      if (!query) {
+        const { listRootDirectory } = await import('./utils/list');
+        const rootPaths = listRootDirectory(context.cwd);
+        return {
+          success: true,
+          data: {
+            paths: rootPaths,
+            truncated: false,
+          },
+        };
+      }
+
+      const { searchFiles } = await import('./utils/ripgrep');
+      const result = await searchFiles(context.cwd, query, maxResults);
+      return result;
+    });
+
     this.messageBus.registerHandler('utils.telemetry', async (data) => {
       const { cwd, name, payload } = data;
       const context = await this.getContext(cwd);
