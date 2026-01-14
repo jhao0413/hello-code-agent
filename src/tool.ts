@@ -34,9 +34,11 @@ type ResolveToolsOpts = {
 export async function resolveTools(opts: ResolveToolsOpts) {
   const { cwd, productName, paths } = opts.context;
   const sessionId = opts.sessionId;
-  // TODO: use small model for fetch tool
   const model = (
-    await resolveModelWithContext(opts.context.config.model, opts.context)
+    await resolveModelWithContext(
+      opts.context.config.smallModel || opts.context.config.model,
+      opts.context,
+    )
   ).model!;
   const hasSkills =
     opts.context.skillManager &&
