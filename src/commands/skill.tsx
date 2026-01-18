@@ -80,12 +80,16 @@ const AddSkillUI: React.FC<AddSkillUIProps> = ({
   }
 
   const { result } = state;
+  const installDir =
+    result.installed.length > 0
+      ? path.dirname(path.dirname(result.installed[0].path))
+      : null;
   return (
     <Box flexDirection="column">
       {result.installed.length > 0 && (
         <Box flexDirection="column">
           <Text color="green" bold>
-            ✓ Installed {result.installed.length} skill(s):
+            ✓ Installed {result.installed.length} skill(s) to {installDir}:
           </Text>
           {result.installed.map((skill) => (
             <Box key={skill.name} marginLeft={2}>
