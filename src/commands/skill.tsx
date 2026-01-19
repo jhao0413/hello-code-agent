@@ -162,6 +162,7 @@ const sourceLabels: Record<SkillSource, string> = {
   [SkillSource.ProjectClaude]: 'project-claude',
   [SkillSource.Project]: 'project',
   [SkillSource.Plugin]: 'plugin',
+  [SkillSource.Config]: 'config',
 };
 
 const sourceColors: Record<SkillSource, string> = {
@@ -170,6 +171,7 @@ const sourceColors: Record<SkillSource, string> = {
   [SkillSource.ProjectClaude]: 'magenta',
   [SkillSource.Project]: 'green',
   [SkillSource.Plugin]: 'blueBright',
+  [SkillSource.Config]: 'yellow',
 };
 
 const SkillListUI: React.FC<SkillListUIProps> = ({ skillManager }) => {

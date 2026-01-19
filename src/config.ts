@@ -93,6 +93,12 @@ export type Config = {
    */
   agent?: Record<string, AgentConfig>;
   /**
+   * Extra SKILL.md file paths for user-defined skills.
+   * Accepts absolute paths to SKILL.md files or directories containing SKILL.md.
+   * Example: ["/path/to/my-skill/SKILL.md", "/path/to/skill-dir"]
+   */
+  skills?: string[];
+  /**
    * Notification configuration.
    * - true: play default sound (Funk/warning)
    * - false: disabled
@@ -140,8 +146,9 @@ const VALID_CONFIG_KEYS = [
   'tools',
   'agent',
   'notification',
+  'skills',
 ];
-const ARRAY_CONFIG_KEYS = ['plugins'];
+const ARRAY_CONFIG_KEYS = ['plugins', 'skills'];
 const OBJECT_CONFIG_KEYS = [
   'mcpServers',
   'commit',

@@ -9,6 +9,7 @@ import { safeFrontMatter } from './utils/safeFrontMatter';
 
 export enum SkillSource {
   Plugin = 'plugin',
+  Config = 'config',
   GlobalClaude = 'global-claude',
   Global = 'global',
   ProjectClaude = 'project-claude',
@@ -132,6 +133,28 @@ export class SkillManager {
       }
     }
 
+    // Load skills from config.skills
+    const configSkills = this.context.config.skills;
+    if (Array.isArray(configSkills)) {
+      for (const skillPath of configSkills) {
+        if (typeof skillPath !== 'string') {
+          this.errors.push({
+            path: String(skillPath),
+            message: 'Invalid skill path type: expected string',
+          });
+          continue;
+        }
+        if (!fs.existsSync(skillPath)) {
+          this.errors.push({
+            path: skillPath,
+            message: 'Skill path not found',
+          });
+          continue;
+        }
+        this.loadSkillPath(skillPath, SkillSource.Config);
+      }
+    }
+
     const globalClaudeDir = path.join(
       path.dirname(this.paths.globalConfigDir),
       '.claude',
@@ -191,6 +214,35 @@ export class SkillManager {
 
       if (parsed) {
         this.skillsMap.set(parsed.name, { ...parsed, source });
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unknown error loading skill';
+      this.errors.push({
+        path: skillPath,
+        message,
+      });
+    }
+  }
+
+  /**
+   * Load skill from a path that can be either a SKILL.md file or a directory containing SKILL.md.
+   */
+  private loadSkillPath(skillPath: string, source: SkillSource): void {
+    try {
+      const stat = fs.statSync(skillPath);
+      if (stat.isDirectory()) {
+        const skillFilePath = path.join(skillPath, 'SKILL.md');
+        if (fs.existsSync(skillFilePath)) {
+          this.loadSkillFile(skillFilePath, source);
+        } else {
+          this.errors.push({
+            path: skillPath,
+            message: 'Directory does not contain SKILL.md',
+          });
+        }
+      } else {
+        this.loadSkillFile(skillPath, source);
       }
     } catch (error) {
       const message =
