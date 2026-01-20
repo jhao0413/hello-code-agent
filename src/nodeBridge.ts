@@ -767,6 +767,89 @@ class NodeHandlerRegistry {
       }
     });
 
+    this.messageBus.registerHandler('projects.list', async (data) => {
+      const { cwd, includeSessionDetails = false } = data;
+      try {
+        const context = await this.getContext(cwd);
+        const { GlobalData } = await import('./globalData');
+        const { Paths } = await import('./paths');
+        const { existsSync } = await import('fs');
+
+        const globalDataPath = context.paths.getGlobalDataPath();
+        const globalData = new GlobalData({ globalDataPath });
+
+        // Read all projects from GlobalData
+        const allData = globalData['readData']();
+        const projectPaths = Object.keys(allData.projects || {});
+
+        const projects = projectPaths.map((projectPath) => {
+          const projectInfo = allData.projects[projectPath];
+          const lastAccessed = projectInfo.lastAccessed || null;
+
+          // Get session count for this project
+          const projectPaths = new Paths({
+            productName: context.productName,
+            cwd: projectPath,
+          });
+
+          let sessionCount = 0;
+          let sessions: Array<{
+            sessionId: string;
+            modified: Date;
+            created: Date;
+            messageCount: number;
+            summary: string;
+          }> = [];
+
+          if (existsSync(projectPaths.globalProjectDir)) {
+            const allSessions = projectPaths.getAllSessions();
+            sessionCount = allSessions.length;
+
+            if (includeSessionDetails) {
+              sessions = allSessions;
+            }
+          }
+
+          const result: {
+            path: string;
+            lastAccessed: number | null;
+            sessionCount: number;
+            sessions?: typeof sessions;
+          } = {
+            path: projectPath,
+            lastAccessed,
+            sessionCount,
+          };
+
+          if (includeSessionDetails) {
+            result.sessions = sessions;
+          }
+
+          return result;
+        });
+
+        // Sort by lastAccessed (most recent first)
+        projects.sort((a, b) => {
+          if (a.lastAccessed === null && b.lastAccessed === null) return 0;
+          if (a.lastAccessed === null) return 1;
+          if (b.lastAccessed === null) return -1;
+          return b.lastAccessed - a.lastAccessed;
+        });
+
+        return {
+          success: true,
+          data: {
+            projects,
+          },
+        };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to list projects',
+        };
+      }
+    });
+
     this.messageBus.registerHandler('project.getRepoInfo', async (data) => {
       const { cwd } = data;
       try {

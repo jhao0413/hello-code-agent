@@ -23,6 +23,7 @@ interface ParsedArgs {
   prompt: string | null;
   timeout: number | null;
   cwd: string;
+  includeSessionDetails: boolean;
 }
 
 function parseArgs(): ParsedArgs {
@@ -35,6 +36,7 @@ function parseArgs(): ParsedArgs {
     prompt: null,
     timeout: null,
     cwd: process.cwd(),
+    includeSessionDetails: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -51,6 +53,8 @@ function parseArgs(): ParsedArgs {
       result.timeout = parseInt(args[++i], 10);
     } else if (arg === '--cwd' && args[i + 1]) {
       result.cwd = args[++i];
+    } else if (arg === '--includeSessionDetails') {
+      result.includeSessionDetails = true;
     } else if (!arg.startsWith('-') && !result.handler) {
       result.handler = arg;
     }
@@ -75,6 +79,7 @@ Options:
   --prompt <text>   Custom prompt for models.test (default: 'hi')
   --timeout <ms>    Timeout in milliseconds for models.test (default: 15000)
   --cwd <path>      Working directory (defaults to current directory)
+  --includeSessionDetails  Include session details for projects.list
 
 Examples:
   bun scripts/test-nodebridge.ts --list
@@ -83,6 +88,7 @@ Examples:
   bun scripts/test-nodebridge.ts models.test --model openai/gpt-4o --prompt "Say hello" --timeout 5000
   bun scripts/test-nodebridge.ts providers.list
   bun scripts/test-nodebridge.ts config.list
+  bun scripts/test-nodebridge.ts projects.list --includeSessionDetails
 `);
 }
 
@@ -141,6 +147,15 @@ const HANDLERS: Record<
   'project.workspaces.list': {
     description: 'List all workspaces',
     getData: (args) => ({ cwd: args.cwd }),
+  },
+
+  // Projects
+  'projects.list': {
+    description: 'List all projects that have been used',
+    getData: (args) => ({
+      cwd: args.cwd,
+      includeSessionDetails: args.includeSessionDetails,
+    }),
   },
 
   // Sessions
