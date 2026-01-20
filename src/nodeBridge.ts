@@ -863,17 +863,28 @@ class NodeHandlerRegistry {
     this.messageBus.registerHandler('project.getRepoInfo', async (data) => {
       const { cwd } = data;
       try {
+        const timings: Record<string, number> = {};
+        const startTotal = Date.now();
+
+        let t0 = Date.now();
         const context = await this.getContext(cwd);
+        timings['getContext'] = Date.now() - t0;
+
+        t0 = Date.now();
         const { getGitRoot, listWorktrees, isGitRepository } = await import(
           './worktree'
         );
-        const { getGitRemoteUrl, getDefaultBranch, getGitSyncStatus } =
-          await import('./utils/git');
+        const { getGitRemoteUrl, getDefaultBranch } = await import(
+          './utils/git'
+        );
         const { GlobalData } = await import('./globalData');
         const { basename } = await import('pathe');
+        timings['imports'] = Date.now() - t0;
 
         // Check if it's a git repository
+        t0 = Date.now();
         const isGit = await isGitRepository(cwd);
+        timings['isGitRepository'] = Date.now() - t0;
         if (!isGit) {
           return {
             success: false,
@@ -882,18 +893,30 @@ class NodeHandlerRegistry {
         }
 
         // Get git root path
+        t0 = Date.now();
         const gitRoot = await getGitRoot(cwd);
+        timings['getGitRoot'] = Date.now() - t0;
 
         // Get git remote information
+        t0 = Date.now();
         const originUrl = await getGitRemoteUrl(gitRoot);
+        timings['getGitRemoteUrl'] = Date.now() - t0;
+
+        t0 = Date.now();
         const defaultBranch = await getDefaultBranch(gitRoot);
-        const syncStatus = await getGitSyncStatus(gitRoot);
+        timings['getDefaultBranch'] = Date.now() - t0;
+
+        // NOTE: getGitSyncStatus removed - it does `git fetch` which is slow (5+ seconds)
+        // If needed in the future, make it opt-in via a parameter
 
         // Get workspace names
+        t0 = Date.now();
         const worktrees = await listWorktrees(gitRoot);
+        timings['listWorktrees'] = Date.now() - t0;
         const workspaceIds = worktrees.map((w) => w.id);
 
         // Get last accessed timestamp from GlobalData
+        t0 = Date.now();
         const globalDataPath = context.paths.getGlobalDataPath();
         const globalData = new GlobalData({ globalDataPath });
         const lastAccessed =
@@ -901,9 +924,12 @@ class NodeHandlerRegistry {
 
         // Update last accessed time
         globalData.updateProjectLastAccessed({ cwd: gitRoot });
+        timings['globalData'] = Date.now() - t0;
 
         // Get project settings from config
         const settings = context.config;
+
+        timings['total'] = Date.now() - startTotal;
 
         const repoData = {
           path: gitRoot,
@@ -916,13 +942,12 @@ class NodeHandlerRegistry {
           gitRemote: {
             originUrl,
             defaultBranch,
-            syncStatus,
           },
         };
 
         return {
           success: true,
-          data: { repoData },
+          data: { repoData, timings },
         };
       } catch (error: any) {
         return {
