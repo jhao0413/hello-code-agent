@@ -990,6 +990,16 @@ class NodeHandlerRegistry {
     this.messageBus.registerHandler('project.workspaces.list', async (data) => {
       const { cwd } = data;
       try {
+        const { existsSync, statSync } = await import('fs');
+
+        // Check if cwd exists
+        if (!existsSync(cwd)) {
+          return {
+            success: false,
+            error: `Directory does not exist: ${cwd}`,
+          };
+        }
+
         const context = await this.getContext(cwd);
         const { getGitRoot, listWorktrees, isGitRepository } = await import(
           './worktree'
@@ -998,9 +1008,41 @@ class NodeHandlerRegistry {
         // Check if it's a git repository
         const isGit = await isGitRepository(cwd);
         if (!isGit) {
+          // Return default workspace for non-git directories
+          let createdAt = Date.now();
+          try {
+            const stats = statSync(cwd);
+            createdAt = stats.birthtimeMs || stats.ctimeMs;
+          } catch {
+            // Use current time as fallback
+          }
+
+          const defaultWorkspace = {
+            id: `${cwd}:default`,
+            repoPath: cwd,
+            branch: 'default',
+            worktreePath: cwd,
+            sessionIds: context.paths.getAllSessions().map((s) => s.sessionId),
+            gitState: {
+              currentCommit: '',
+              isDirty: false,
+              pendingChanges: [],
+            },
+            metadata: {
+              createdAt,
+              description: '',
+              status: 'active' as const,
+            },
+            context: {
+              activeFiles: [],
+              settings: context.config,
+              preferences: {},
+            },
+          };
+
           return {
-            success: false,
-            error: 'Not a git repository',
+            success: true,
+            data: { workspaces: [defaultWorkspace] },
           };
         }
 
