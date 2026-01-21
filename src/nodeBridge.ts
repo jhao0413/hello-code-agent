@@ -2880,6 +2880,28 @@ ${diff}
       return { success: true };
     });
 
+    this.messageBus.registerHandler('utils.playSound', async (data) => {
+      const { sound, volume = 1.0 } = data;
+      try {
+        const { playSound, SOUND_PRESETS } = await import('./utils/sound');
+
+        // Check if sound is a preset name
+        const soundName =
+          sound in SOUND_PRESETS
+            ? SOUND_PRESETS[sound as keyof typeof SOUND_PRESETS]
+            : sound;
+
+        await playSound(soundName, volume);
+
+        return { success: true };
+      } catch (error: any) {
+        return {
+          success: false,
+          error: error.message || 'Failed to play sound',
+        };
+      }
+    });
+
     this.messageBus.registerHandler('utils.detectApps', async (data) => {
       const { apps: appsToCheck } = data;
       const { existsSync } = await import('fs');

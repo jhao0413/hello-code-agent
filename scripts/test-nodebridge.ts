@@ -173,6 +173,7 @@ const HANDLERS: Record<string, string> = {
   // Utils
   'utils.getPaths': 'Get file paths in project',
   'utils.detectApps': 'Detect installed applications',
+  'utils.playSound': 'Play a system sound or preset',
 };
 
 function listHandlers(): void {
