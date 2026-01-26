@@ -347,7 +347,7 @@ export const useAppStore = create<AppStore>()(
           model: response.data.model,
           planModel: response.data.planModel,
           initializeModelError: response.data.initializeModelError,
-          modelContextLimit: response.data.model?.model?.limit.context || 0,
+          modelContextLimit: response.data.model?.model?.limit?.context || 0,
           providers: response.data.providers,
           sessionId: opts.sessionId,
           messages: opts.messages,
