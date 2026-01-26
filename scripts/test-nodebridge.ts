@@ -163,6 +163,14 @@ const HANDLERS: Record<string, string> = {
   // Sessions
   'sessions.list': 'List all sessions',
 
+  // Skills
+  'skills.list': 'List all loaded skills',
+  'skills.get': 'Get a specific skill by name with body content',
+  'skills.add': 'Add skill from remote source (GitHub)',
+  'skills.remove': 'Remove an installed skill',
+  'skills.preview': 'Preview skills from a source before installing',
+  'skills.install': 'Install selected skills from a preview',
+
   // Slash Commands
   'slashCommand.list': 'List all slash commands',
 
