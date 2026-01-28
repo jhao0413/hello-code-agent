@@ -2521,8 +2521,9 @@ ${diff}
     this.messageBus.registerHandler('session.config.get', async (data) => {
       const { cwd, sessionId, key } = data;
       const context = await this.getContext(cwd);
+      const logPath = context.paths.getSessionLogPath(sessionId);
       const sessionConfigManager = new SessionConfigManager({
-        logPath: context.paths.getSessionLogPath(sessionId),
+        logPath,
       });
       const value = key
         ? (sessionConfigManager.config as any)[key]
