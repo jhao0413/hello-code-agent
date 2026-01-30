@@ -98,8 +98,12 @@ function normalizeModel(
   if (typeof model === 'string') {
     actualModel = models[model.toLocaleLowerCase()] || {};
   } else {
-    const splitedModelId = modelId.split('/').slice(-1)[0].toLocaleLowerCase();
-    actualModel = models[splitedModelId];
+    const splitedModelId = modelId
+      .split('/')
+      .slice(-1)[0]
+      .toLocaleLowerCase()
+      .replace(/-free$/, '');
+    actualModel = models[splitedModelId] || {};
     extraInfo = { ...model };
   }
   if (!actualModel.limit) {
