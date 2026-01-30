@@ -63,26 +63,6 @@ export function getProviderApiKey(provider: Provider) {
   return key;
 }
 
-export const openaiModelCreator = (
-  name: string,
-  provider: Provider,
-): LanguageModelV3 => {
-  if (provider.id !== 'openai') {
-    assert(provider.api, `Provider ${provider.id} must have an api`);
-  }
-  const baseURL = getProviderBaseURL(provider);
-  const apiKey = getProviderApiKey(provider);
-  return createOpenAI(
-    withProxyConfig(
-      {
-        baseURL,
-        apiKey,
-      },
-      provider,
-    ),
-  ).chat(name);
-};
-
 export const createModelCreator = (
   modelId: string,
   provider: Provider,

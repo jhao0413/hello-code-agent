@@ -81,7 +81,7 @@ export class History {
     return this.messages.filter((msg) => pathUuids.has(msg.uuid));
   }
 
-  toLanguageV2Messages(): LanguageModelV3Message[] {
+  toLanguageV3Messages(): LanguageModelV3Message[] {
     return this.messages.map((message: NormalizedMessage) => {
       if (message.role === 'user') {
         const content = message.content as UserContent;
@@ -142,9 +142,6 @@ export class History {
                 toolCallId: part.id,
                 toolName: part.name,
                 input: part.input,
-                ...(part.providerMetadata && {
-                  providerMetadata: part.providerMetadata,
-                }),
               };
             } else {
               throw new Error(

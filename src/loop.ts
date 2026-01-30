@@ -243,7 +243,7 @@ export async function runLoop(opts: RunLoopOpts): Promise<LoopResult> {
       let prompt: LanguageModelV3Prompt = [
         systemPromptMessage,
         ...llmsContextMessages,
-        ...history.toLanguageV2Messages(),
+        ...history.toLanguageV3Messages(),
       ];
 
       if (shouldAtNormalize) {

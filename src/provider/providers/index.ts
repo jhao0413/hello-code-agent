@@ -13,7 +13,6 @@ export {
   withProxyConfig,
   getProviderBaseURL,
   getProviderApiKey,
-  openaiModelCreator,
   createModelCreator,
 } from './utils';
 

@@ -1,5 +1,4 @@
-import { type Provider } from './types';
-import { openaiModelCreator } from './utils';
+import { ApiFormat, type Provider } from './types';
 
 export const openaiProvider: Provider = {
   id: 'openai',
@@ -10,12 +9,24 @@ export const openaiProvider: Provider = {
   api: 'https://api.openai.com/v1',
   doc: 'https://platform.openai.com/docs/models',
   models: {
-    'gpt-4.1': {},
-    'gpt-4': {},
-    'gpt-4o': {},
-    o3: {},
-    'o3-mini': {},
-    'o4-mini': {},
+    'gpt-4.1': {
+      apiFormat: ApiFormat.OpenAI,
+    },
+    'gpt-4': {
+      apiFormat: ApiFormat.OpenAI,
+    },
+    'gpt-4o': {
+      apiFormat: ApiFormat.OpenAI,
+    },
+    o3: {
+      apiFormat: ApiFormat.OpenAI,
+    },
+    'o3-mini': {
+      apiFormat: ApiFormat.OpenAI,
+    },
+    'o4-mini': {
+      apiFormat: ApiFormat.OpenAI,
+    },
     'gpt-5.1': {},
     'gpt-5.1-codex': {},
     'gpt-5.1-codex-mini': {},
@@ -27,5 +38,5 @@ export const openaiProvider: Provider = {
     'gpt-5.2-pro': {},
     'gpt-5.2-codex': {},
   },
-  createModel: openaiModelCreator,
+  apiFormat: ApiFormat.Responses,
 };

@@ -129,9 +129,38 @@ function transformVariants(model: Model, provider: Provider) {
   }
 
   const apiFormat = model.apiFormat || provider.apiFormat;
+  const WIDELY_SUPPORTED_EFFORTS = ['low', 'medium', 'high'];
+
+  if (apiFormat === ApiFormat.Responses) {
+    // https://v5.ai-sdk.dev/providers/ai-sdk-providers/openai
+    if (id === 'gpt-5-pro') return {};
+    const openaiEfforts = (() => {
+      if (id.includes('codex')) {
+        if (id.includes('5.2')) return [...WIDELY_SUPPORTED_EFFORTS, 'xhigh'];
+        return WIDELY_SUPPORTED_EFFORTS;
+      }
+      const arr = [...WIDELY_SUPPORTED_EFFORTS];
+      if (id.includes('gpt-5-') || id === 'gpt-5') {
+        arr.unshift('minimal');
+      }
+      if (model.release_date >= '2025-12-04') {
+        arr.push('xhigh');
+      }
+      return arr;
+    })();
+    return Object.fromEntries(
+      openaiEfforts.map((effort) => [
+        effort,
+        {
+          reasoningEffort: effort,
+          reasoningSummary: 'auto',
+          include: ['reasoning.encrypted_content'],
+        },
+      ]),
+    );
+  }
 
   if (apiFormat === ApiFormat.OpenAI) {
-    const WIDELY_SUPPORTED_EFFORTS = ['low', 'medium', 'high'];
     return Object.fromEntries(
       WIDELY_SUPPORTED_EFFORTS.map((effort) => [
         effort,
