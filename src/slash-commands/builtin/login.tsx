@@ -42,7 +42,7 @@ interface OAuthAuthorizationUIProps {
 }
 
 interface OAuthState {
-  providerId: 'github-copilot' | 'antigravity';
+  providerId: 'github-copilot' | 'antigravity' | 'qwen';
   authUrl: string;
   userCode?: string;
   oauthSessionId: string;
@@ -278,7 +278,11 @@ export const LoginSelect: React.FC<LoginSelectProps> = ({
   }, [cwd, bridge, onExit, initialProviderId]);
 
   const handleProviderSelectWithProvider = async (provider: Provider) => {
-    if (provider.id === 'github-copilot' || provider.id === 'antigravity') {
+    if (
+      provider.id === 'github-copilot' ||
+      provider.id === 'antigravity' ||
+      provider.id === 'qwen'
+    ) {
       const statusResult = await bridge.request('providers.login.status', {
         cwd,
         providerId: provider.id,
@@ -293,7 +297,7 @@ export const LoginSelect: React.FC<LoginSelectProps> = ({
 
       const initResult = await bridge.request('providers.login.initOAuth', {
         cwd,
-        providerId: provider.id as 'github-copilot' | 'antigravity',
+        providerId: provider.id as 'github-copilot' | 'antigravity' | 'qwen',
       });
 
       if (!initResult.success) {
@@ -443,9 +447,12 @@ export const LoginSelect: React.FC<LoginSelectProps> = ({
     const title =
       oauthState.providerId === 'github-copilot'
         ? 'GitHub Copilot Authorization'
-        : 'Antigravity Authorization';
+        : oauthState.providerId === 'qwen'
+          ? 'Qwen Authorization'
+          : 'Antigravity Authorization';
     const waitingMessage =
-      oauthState.providerId === 'antigravity'
+      oauthState.providerId === 'antigravity' ||
+      oauthState.providerId === 'qwen'
         ? 'Waiting for authorization in browser...'
         : 'Waiting for authorization...';
 

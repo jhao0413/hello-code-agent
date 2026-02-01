@@ -1,11 +1,15 @@
-import { AntigravityProvider, GithubProvider } from 'oauth-providers';
+import {
+  AntigravityProvider,
+  GithubProvider,
+  QwenProvider,
+} from 'oauth-providers';
 import { ConfigManager } from '../../config';
 import type { Context } from '../../context';
 import type { MessageBus } from '../../messageBus';
 import { type Provider, resolveModelWithContext } from '../../provider/model';
 
 interface OAuthSession {
-  provider: GithubProvider | AntigravityProvider;
+  provider: GithubProvider | AntigravityProvider | QwenProvider;
   providerId: string;
   createdAt: number;
   cleanup?: () => void;
@@ -54,7 +58,7 @@ export function registerProvidersHandlers(
     try {
       let authUrl: string;
       let userCode: string | undefined;
-      let oauthProvider: GithubProvider | AntigravityProvider;
+      let oauthProvider: GithubProvider | AntigravityProvider | QwenProvider;
       let cleanup: (() => void) | undefined;
       let tokenPromise: Promise<string> | undefined;
 
@@ -76,6 +80,16 @@ export function registerProvidersHandlers(
         }
         authUrl = auth.authUrl;
         oauthProvider = antigravityProvider;
+        cleanup = auth.cleanup;
+        tokenPromise = auth.tokenPromise;
+      } else if (providerId === 'qwen') {
+        const qwenProvider = new QwenProvider();
+        const auth = await qwenProvider.initAuth(timeout);
+        if (!auth.authUrl) {
+          return { success: false, error: 'Failed to get authorization URL' };
+        }
+        authUrl = auth.authUrl;
+        oauthProvider = qwenProvider;
         cleanup = auth.cleanup;
         tokenPromise = auth.tokenPromise;
       } else {
@@ -178,6 +192,25 @@ export function registerProvidersHandlers(
           `provider.antigravity.options.apiKey`,
           JSON.stringify(account),
         );
+      } else if (session.providerId === 'qwen') {
+        const qwenProvider = session.provider as QwenProvider;
+        await qwenProvider.getToken(token);
+        const account = qwenProvider.getState() as any;
+        if (!account) {
+          return {
+            success: true,
+            data: {
+              status: 'error' as const,
+              error: 'Failed to get account after authentication',
+            },
+          };
+        }
+        user = account.username || account.email;
+        configManager.setConfig(
+          true,
+          `provider.qwen.options.apiKey`,
+          JSON.stringify(account),
+        );
       }
 
       session.cleanup?.();
@@ -244,6 +277,22 @@ export function registerProvidersHandlers(
           `provider.antigravity.options.apiKey`,
           JSON.stringify(account),
         );
+      } else if (providerId === 'qwen') {
+        const qwenProvider = session.provider as QwenProvider;
+        await qwenProvider.getToken(code);
+        const account = qwenProvider.getState() as any;
+        if (!account) {
+          return {
+            success: false,
+            error: 'Failed to get account after authentication',
+          };
+        }
+        user = account.username || account.email;
+        configManager.setConfig(
+          true,
+          `provider.qwen.options.apiKey`,
+          JSON.stringify(account),
+        );
       }
 
       session.cleanup?.();
@@ -266,7 +315,11 @@ export function registerProvidersHandlers(
     }
 
     let user: string | undefined;
-    if (providerId === 'github-copilot' || providerId === 'antigravity') {
+    if (
+      providerId === 'github-copilot' ||
+      providerId === 'antigravity' ||
+      providerId === 'qwen'
+    ) {
       try {
         const account = JSON.parse(apiKey);
         user =

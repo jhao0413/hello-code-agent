@@ -227,6 +227,7 @@ const baseModels: ModelMap = {
     modalities: { input: ['text'], output: ['text'] },
     open_weights: true,
     limit: { context: 1048576, output: 65536 },
+    aliases: ['coder-model'],
   },
   'qwen3-235b-a22b-07-25': {
     name: 'Qwen3 235B A22B Instruct 2507',

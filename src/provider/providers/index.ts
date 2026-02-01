@@ -48,6 +48,7 @@ export { nvidiaProvider } from './nvidia';
 export { canopywaveProvider } from './canopywave';
 export { modelwatchProvider } from './modelwatch';
 export { opencodeZenProvider } from './opencode-zen';
+export { qwenProvider } from './qwen';
 
 import type { ProvidersMap } from './types';
 import { githubCopilotProvider } from './github-copilot';
@@ -80,6 +81,7 @@ import { antigravityProvider } from './antigravity';
 import { nvidiaProvider } from './nvidia';
 import { canopywaveProvider } from './canopywave';
 import { modelwatchProvider } from './modelwatch';
+import { qwenProvider } from './qwen';
 // import { opencodeZenProvider } from './opencode-zen';
 
 // Combined providers map
@@ -114,5 +116,6 @@ export const providers: ProvidersMap = {
   nvidia: nvidiaProvider,
   canopywave: canopywaveProvider,
   modelwatch: modelwatchProvider,
+  qwen: qwenProvider,
   // opencode: opencodeZenProvider,
 };
