@@ -12,6 +12,8 @@ import { AskQuestionModal } from './AskQuestionModal';
 import { UI_COLORS } from './constants';
 import { DashedDivider } from './DashedDivider';
 import { DiffViewer } from './DiffViewer';
+import { Markdown } from './Markdown';
+import { PlanApprovalView } from './PlanMode/PlanApprovalView';
 import { SelectInput, type SelectOption } from './SelectInput';
 import { type ApprovalResult, useAppStore } from './store';
 import { useTerminalSize } from './useTerminalSize';
@@ -159,9 +161,28 @@ function InvalidQuestionsError({ onDismiss }: { onDismiss: () => void }) {
 }
 
 export function ApprovalModal() {
-  const { approvalModal } = useAppStore();
+  const { approvalModal, planFilePath, planContent, productName } =
+    useAppStore();
   if (!approvalModal) {
     return null;
+  }
+
+  if (approvalModal.toolUse.name === TOOL_NAMES.EXIT_PLAN_MODE) {
+    return (
+      <PlanApprovalView
+        planFilePath={planFilePath || '(unknown)'}
+        planContent={planContent}
+        onApprove={(mode) => {
+          approvalModal.resolve('approve_once', { approvalMode: mode });
+        }}
+        onDeny={(feedback) => {
+          const rejectionMessage = feedback
+            ? feedback
+            : `User rejected ${productName}'s plan:`;
+          approvalModal.resolve('deny', { denyReason: rejectionMessage });
+        }}
+      />
+    );
   }
 
   // Special handling for askUserQuestion tool

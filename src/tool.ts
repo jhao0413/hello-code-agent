@@ -3,6 +3,7 @@ import path from 'pathe';
 import * as z from 'zod';
 import type { Context } from './context';
 import type { ImagePart, TextPart } from './message';
+import { createPlanFileManager } from './planFile';
 import { resolveModelWithContext } from './provider/model';
 import { PluginHookType } from './plugin';
 import { createAskUserQuestionTool } from './tools/askUserQuestion';
@@ -12,6 +13,7 @@ import {
   createKillBashTool,
 } from './tools/bash';
 import { createEditTool } from './tools/edit';
+import { createExitPlanModeTool } from './tools/exitPlanMode';
 import { createFetchTool } from './tools/fetch';
 import { createGlobTool } from './tools/glob';
 import { createGrepTool } from './tools/grep';
@@ -87,6 +89,21 @@ export async function resolveTools(opts: ResolveToolsOpts) {
       ]
     : [];
 
+  // Plan Mode tools (always registered)
+  const planFileManager = createPlanFileManager({
+    context: opts.context,
+    sessionId: opts.sessionId,
+  });
+
+  const planModeTools = [
+    createExitPlanModeTool({
+      context: opts.context,
+      sessionId: opts.sessionId,
+      messageBus: opts.context.messageBus,
+      planFileManager,
+    }),
+  ];
+
   const mcpTools = await getMcpTools(opts.context);
 
   const allTools = [
@@ -95,6 +112,7 @@ export async function resolveTools(opts: ResolveToolsOpts) {
     ...writeTools,
     ...todoTools,
     ...backgroundTools,
+    ...planModeTools, // Added directly, agents will filter via disallowedTools
     ...mcpTools,
   ];
 
@@ -332,11 +350,20 @@ type AgentResultReturnDisplay = {
   status: 'completed' | 'failed';
 };
 
+type PlanModeExitReturnDisplay = {
+  type: 'plan_mode_exit';
+  planFilePath: string;
+  planContent: string | null;
+  isAgent: boolean;
+  scenario: 'approved_with_plan' | 'approved_without_plan' | 'agent_completed';
+};
+
 export type ReturnDisplay =
   | string
   | DiffViewerReturnDisplay
   | TodoWriteReturnDisplay
-  | AgentResultReturnDisplay;
+  | AgentResultReturnDisplay
+  | PlanModeExitReturnDisplay;
 
 export type ToolResult = {
   llmContent: string | (TextPart | ImagePart)[];
