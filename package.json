@@ -111,7 +111,7 @@
     "lodash-es": "^4.17.23",
     "marked": "^17.0.1",
     "marked-terminal": "^7.3.0",
-    "oauth-providers": "^1.0.4",
+    "oauth-providers": "^1.0.5",
     "open": "^11.0.0",
     "pathe": "^2.0.3",
     "picocolors": "^1.1.1",

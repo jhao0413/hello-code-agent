@@ -163,8 +163,8 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0(patch_hash=536fe9685e91d559cf29a033191aa39da45729949e9d1c69989255091c8618fb)(marked@17.0.1)
       oauth-providers:
-        specifier: ^1.0.4
-        version: 1.0.4(@ai-sdk/provider@3.0.7)(zod@4.3.6)
+        specifier: ^1.0.5
+        version: 1.0.5(@ai-sdk/provider@3.0.7)(zod@4.3.6)
       open:
         specifier: ^11.0.0
         version: 11.0.0
@@ -3579,8 +3579,8 @@ packages:
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
-  oauth-providers@1.0.4:
-    resolution: {integrity: sha512-J2hD2GOSWlH/RZvOWve4w1Yr5RQE5mdqGbxvMcA29wMyb9NIENkbm5eWswc2dOdAsfgHSUqWfkqsNP9ifR9kOw==}
+  oauth-providers@1.0.5:
+    resolution: {integrity: sha512-RRoBZOC/o3v7xmGLMcG7fgepW9ZFX81DmpD2mIpdJLLIk5JRJnT9ltJw5QrPKU/wFv+XZ/o7MNze30uzouGqFw==}
     peerDependencies:
       '@ai-sdk/provider': '2'
       zod: '4'
@@ -8253,7 +8253,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  oauth-providers@1.0.4(@ai-sdk/provider@3.0.7)(zod@4.3.6):
+  oauth-providers@1.0.5(@ai-sdk/provider@3.0.7)(zod@4.3.6):
     dependencies:
       '@ai-sdk/provider': 3.0.7
       zod: 4.3.6
