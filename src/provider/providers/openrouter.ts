@@ -1,4 +1,6 @@
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { ApiFormat, type Provider } from './types';
+import { getProviderApiKey } from './utils';
 
 export const openrouterProvider: Provider = {
   id: 'openrouter',
@@ -61,8 +63,15 @@ export const openrouterProvider: Provider = {
     'minimax/minimax-m2': {},
   },
   apiFormat: ApiFormat.Anthropic,
-  headers: {
-    'X-Title': 'Neovate Code',
-    'HTTP-Referer': 'https://neovateai.dev/',
+  createModel(name, provider, { customFetch }) {
+    const apiKey = getProviderApiKey(provider);
+    return createOpenRouter({
+      apiKey,
+      fetch: customFetch as typeof fetch,
+      headers: {
+        'X-Title': 'Neovate Code',
+        'HTTP-Referer': 'https://neovateai.dev/',
+      },
+    }).chat(name);
   },
 };
