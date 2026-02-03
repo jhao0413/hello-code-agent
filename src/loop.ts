@@ -296,11 +296,14 @@ export async function runLoop(opts: RunLoopOpts): Promise<LoopResult> {
 
       // Get thinking config from model variants
       let thinkingConfig: Record<string, any> | undefined = undefined;
+      let providerId = opts.model.provider.id;
+      if (providerId === 'codex') {
+        providerId = 'openai';
+      }
       if (shouldThinking && opts.thinking) {
         thinkingConfig = {
           providerOptions: {
-            [opts.model.provider.id]:
-              opts.model.model.variants?.[opts.thinking.effort],
+            [providerId]: opts.model.model.variants?.[opts.thinking.effort],
           },
         };
         shouldThinking = false;
