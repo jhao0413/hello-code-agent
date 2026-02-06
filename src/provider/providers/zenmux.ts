@@ -1,19 +1,13 @@
-import { type Provider } from './types';
+import { ApiFormat, type Provider } from './types';
 
 export const zenmuxProvider: Provider = {
   id: 'zenmux',
   source: 'built-in',
   env: ['ZENMUX_API_KEY'],
   name: 'ZenMux',
-  api: 'https://zenmux.ai/api/v1',
+  api: 'https://zenmux.ai/api/anthropic/v1',
   doc: 'https://docs.zenmux.ai/',
   models: {
-    'inclusionai/ling-1t': {},
-    'inclusionai/ring-1t': {},
-    'inclusionai/ring-flash-2.0': {},
-    'inclusionai/ling-flash-2.0': {},
-    'inclusionai/ring-mini-2.0': {},
-    'inclusionai/ling-mini-2.0': {},
     'google/gemini-3-flash-preview': {},
     'google/gemini-3-pro-preview': {},
     'openai/gpt-5.1': {},
@@ -22,11 +16,11 @@ export const zenmuxProvider: Provider = {
     'openai/gpt-5.2': {},
     'openai/gpt-5.2-pro': {},
     'anthropic/claude-sonnet-4.5': {},
-    'anthropic/claude-opus-4.1': {},
     'anthropic/claude-opus-4.5': {},
+    'anthropic/claude-opus-4.6': {},
     'z-ai/glm-4.6': {},
     'z-ai/glm-4.6v': {},
-    'deepseek/deepseek-v3.2-speciale': {},
+    'z-ai/glm-4.7': {},
     'deepseek/deepseek-chat': {},
     'deepseek/deepseek-reasoner': {},
     'moonshotai/kimi-k2.5': {},
@@ -35,4 +29,5 @@ export const zenmuxProvider: Provider = {
     'X-Title': 'Neovate Code',
     'HTTP-Referer': 'https://neovateai.dev/',
   },
+  apiFormat: ApiFormat.Anthropic,
 };

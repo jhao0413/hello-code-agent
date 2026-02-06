@@ -9,6 +9,7 @@ export const poeProvider: Provider = {
   doc: 'https://poe.com',
   models: {
     'Claude-Opus-4.5': {},
+    'Claude-Opus-4.6': { limit: { context: 983040, output: 128000 } },
     'Claude-Sonnet-4.5': {},
     'Gemini-3-Pro': {},
     'Gemini-2.5-Pro': {},

@@ -130,6 +130,29 @@ function transformVariants(model: Model, provider: Provider) {
   }
 
   const id = (model.id || '').toLowerCase();
+
+  if (provider.id === 'zenmux') {
+    if (id.includes('kimi') || id.includes('minimax') || id.includes('glm')) {
+      return {
+        on: {
+          thinking: {
+            type: 'enabled',
+          },
+        },
+      };
+    }
+  }
+
+  if (provider.id === 'xiaomi') {
+    return {
+      on: {
+        thinking: {
+          type: 'enabled',
+        },
+      },
+    };
+  }
+
   if (
     id.includes('deepseek') ||
     id.includes('minimax') ||
@@ -187,15 +210,6 @@ function transformVariants(model: Model, provider: Provider) {
   }
 
   if (apiFormat === ApiFormat.Anthropic) {
-    if (provider.id === 'xiaomi') {
-      return {
-        on: {
-          thinking: {
-            type: 'enabled',
-          },
-        },
-      };
-    }
     return {
       high: {
         thinking: {
