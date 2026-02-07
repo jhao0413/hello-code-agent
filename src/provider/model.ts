@@ -175,7 +175,8 @@ function transformVariants(model: Model, provider: Provider) {
     if (id === 'gpt-5-pro') return {};
     const openaiEfforts = (() => {
       if (id.includes('codex')) {
-        if (id.includes('5.2')) return [...WIDELY_SUPPORTED_EFFORTS, 'xhigh'];
+        if (id.includes('5.2') || id.includes('5.3'))
+          return [...WIDELY_SUPPORTED_EFFORTS, 'xhigh'];
         return WIDELY_SUPPORTED_EFFORTS;
       }
       const arr = [...WIDELY_SUPPORTED_EFFORTS];
