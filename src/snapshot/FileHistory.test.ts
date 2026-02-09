@@ -187,7 +187,7 @@ describe('FileHistory', () => {
         backupRoot: backupDir,
       });
 
-      const result = history.previewRewind('non-existent-msg');
+      const result = history.previewRewind('non-existent-msg', false);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Snapshot not found');
