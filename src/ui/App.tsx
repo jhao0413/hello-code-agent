@@ -66,23 +66,23 @@ export function App() {
         <ActivityIndicator />
         <QueueDisplay />
         {transcriptMode ? <TranscriptModeIndicator /> : <ChatInput />}
-        {forkModalVisible && sessionId && (
-          <ForkModal
-            messages={messages as any}
-            onSelect={(uuid, restoreCode) => {
-              fork(uuid, restoreCode);
-            }}
-            onClose={() => {
-              hideForkModal();
-            }}
-            sessionId={sessionId}
-            cwd={cwd}
-            bridge={bridge}
-          />
-        )}
         <ExitHint />
         <Debug />
       </Box>
+      {forkModalVisible && sessionId && (
+        <ForkModal
+          messages={messages as any}
+          onSelect={(uuid, restoreCode) => {
+            fork(uuid, restoreCode);
+          }}
+          onClose={() => {
+            hideForkModal();
+          }}
+          sessionId={sessionId}
+          cwd={cwd}
+          bridge={bridge}
+        />
+      )}
       <ApprovalModal />
       <SlashCommandJSX />
     </TerminalSizeProvider>
