@@ -64,7 +64,6 @@ export function ForkModal({
         if (isCanceledMessage(m)) return false;
         const text = getMessageText(m);
         if (text === CANCELED_MESSAGE_TEXT) return false;
-        if (isSlashCommand(text)) return false;
         if (hasBashStdout(text)) return false;
         return true;
       }),
