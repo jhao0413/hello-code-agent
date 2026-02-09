@@ -5,6 +5,7 @@ import { homedir } from 'os';
 import path from 'pathe';
 import type {
   FileBackupMeta,
+  FileDiff,
   RewindResult,
   SerializedSnapshot,
   Snapshot,
@@ -462,13 +463,149 @@ export class FileHistory {
   }
 
   /**
+   * Read file content safely, returns empty string if file doesn't exist
+   */
+  private readFileContent(filePath: string): string {
+    try {
+      if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, 'utf-8');
+      }
+    } catch {
+      // Ignore read errors
+    }
+    return '';
+  }
+
+  /**
+   * Get file contents for diff display
+   */
+  private getFileDiffContents(
+    relativePath: string,
+    backupFileName: string | null,
+  ): FileDiff {
+    const currentPath = path.join(this.cwd, relativePath);
+    const backupPath = backupFileName
+      ? path.join(this.backupDir, backupFileName)
+      : null;
+
+    return {
+      path: relativePath,
+      oldContent: backupPath ? this.readFileContent(backupPath) : '',
+      newContent: this.readFileContent(currentPath),
+    };
+  }
+
+  /**
    * Preview rewind (dry run)
    * @param cumulative - If true, calculates changes from this point to current state (for UI display)
    *                     If false, only shows changes in this specific snapshot
    */
   previewRewind(messageId: string, cumulative: boolean = true): RewindResult {
     if (cumulative) {
-      return this.rewindToMessage(messageId, true);
+      const snapshotIndex = this.snapshots.findIndex(
+        (s) => s.messageId === messageId,
+      );
+
+      // If messageId not found, treat as "rewind to before all snapshots"
+      // This handles user messages that have no snapshot
+      if (snapshotIndex === -1) {
+        if (this.snapshots.length === 0) {
+          return {
+            success: true,
+            filesChanged: [],
+            insertions: 0,
+            deletions: 0,
+          };
+        }
+
+        // Use the first snapshot's backups as target state (original files)
+        const allAffectedFiles = new Set<string>();
+        for (const snapshot of this.snapshots) {
+          Object.keys(snapshot.trackedFileBackups).forEach((f) =>
+            allAffectedFiles.add(f),
+          );
+        }
+
+        const filesChanged: string[] = [];
+        const fileDiffs: FileDiff[] = [];
+        let totalInsertions = 0;
+        let totalDeletions = 0;
+
+        for (const relativePath of allAffectedFiles) {
+          const targetPath = path.join(this.cwd, relativePath);
+          // Find the earliest backup for this file (the original state)
+          let earliestBackup: FileBackupMeta | undefined;
+          for (const snapshot of this.snapshots) {
+            if (snapshot.trackedFileBackups[relativePath]) {
+              earliestBackup = snapshot.trackedFileBackups[relativePath];
+              break;
+            }
+          }
+          const targetBackupFileName = earliestBackup?.backupFileName ?? null;
+
+          const diff = this.calculateDiff(targetPath, targetBackupFileName);
+
+          if (diff.insertions > 0 || diff.deletions > 0) {
+            totalInsertions += diff.insertions;
+            totalDeletions += diff.deletions;
+            filesChanged.push(relativePath);
+            fileDiffs.push(
+              this.getFileDiffContents(relativePath, targetBackupFileName),
+            );
+          }
+        }
+
+        return {
+          success: true,
+          filesChanged,
+          insertions: totalInsertions,
+          deletions: totalDeletions,
+          fileDiffs,
+        };
+      }
+
+      const targetSnapshot = this.snapshots[snapshotIndex];
+      const snapshotsAfterTarget = this.snapshots.slice(snapshotIndex + 1);
+
+      const allAffectedFiles = new Set<string>();
+      Object.keys(targetSnapshot.trackedFileBackups).forEach((f) =>
+        allAffectedFiles.add(f),
+      );
+      for (const snapshot of snapshotsAfterTarget) {
+        Object.keys(snapshot.trackedFileBackups).forEach((f) =>
+          allAffectedFiles.add(f),
+        );
+      }
+
+      const filesChanged: string[] = [];
+      const fileDiffs: FileDiff[] = [];
+      let totalInsertions = 0;
+      let totalDeletions = 0;
+
+      for (const relativePath of allAffectedFiles) {
+        const targetPath = path.join(this.cwd, relativePath);
+        const targetBackup = targetSnapshot.trackedFileBackups[relativePath];
+        const targetBackupFileName = targetBackup?.backupFileName ?? null;
+
+        const diff = this.calculateDiff(targetPath, targetBackupFileName);
+
+        if (diff.insertions > 0 || diff.deletions > 0) {
+          totalInsertions += diff.insertions;
+          totalDeletions += diff.deletions;
+          filesChanged.push(relativePath);
+          fileDiffs.push(
+            this.getFileDiffContents(relativePath, targetBackupFileName),
+          );
+        }
+      }
+
+      return {
+        success: true,
+        filesChanged,
+        insertions: totalInsertions,
+        deletions: totalDeletions,
+        fileDiffs,
+      };
     }
 
     const snapshot = this.snapshots.find((s) => s.messageId === messageId);
@@ -483,6 +620,7 @@ export class FileHistory {
     }
 
     const filesChanged: string[] = [];
+    const fileDiffs: FileDiff[] = [];
     let totalInsertions = 0;
     let totalDeletions = 0;
 
@@ -494,6 +632,9 @@ export class FileHistory {
       totalInsertions += diff.insertions;
       totalDeletions += diff.deletions;
       filesChanged.push(relativePath);
+      fileDiffs.push(
+        this.getFileDiffContents(relativePath, backupMeta.backupFileName),
+      );
     }
 
     return {
@@ -501,6 +642,7 @@ export class FileHistory {
       filesChanged,
       insertions: totalInsertions,
       deletions: totalDeletions,
+      fileDiffs,
     };
   }
 }

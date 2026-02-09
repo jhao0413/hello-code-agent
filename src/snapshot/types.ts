@@ -38,6 +38,15 @@ export type SnapshotPreview = {
 };
 
 /**
+ * File diff content for UI display
+ */
+export type FileDiff = {
+  path: string;
+  oldContent: string;
+  newContent: string;
+};
+
+/**
  * Rewind operation result
  */
 export type RewindResult = {
@@ -48,6 +57,8 @@ export type RewindResult = {
   /** Change statistics */
   insertions: number;
   deletions: number;
+  /** File diffs for UI display (only in preview mode) */
+  fileDiffs?: FileDiff[];
 };
 
 /**
