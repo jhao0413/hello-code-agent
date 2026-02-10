@@ -1208,12 +1208,19 @@ type SnapshotPreview = {
   };
 };
 
+type FileDiff = {
+  path: string;
+  oldContent: string;
+  newContent: string;
+};
+
 type RewindResult = {
   success: boolean;
   error?: string;
   filesChanged: string[];
   insertions: number;
   deletions: number;
+  fileDiffs?: FileDiff[];
 };
 
 type SerializedSnapshot = {
