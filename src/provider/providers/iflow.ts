@@ -1,5 +1,21 @@
+import crypto from 'node:crypto';
 import type { Provider } from './types';
+import { createModelCreator, getProviderApiKey } from './utils';
+import { randomUUID } from '../../utils/randomUUID';
 import { mergeSystemMessagesMiddleware } from '../../utils/mergeSystemMessagesMiddleware';
+
+const IFLOW_USER_AGENT = 'iFlow-Cli';
+
+function createIFlowSignature(
+  userAgent: string,
+  sessionId: string,
+  timestamp: number,
+  apiKey: string,
+): string {
+  if (!apiKey) return '';
+  const payload = `${userAgent}:${sessionId}:${timestamp}`;
+  return crypto.createHmac('sha256', apiKey).update(payload).digest('hex');
+}
 
 export const iflowProvider: Provider = {
   id: 'iflow',
@@ -21,8 +37,34 @@ export const iflowProvider: Provider = {
     'qwen3-max': {},
     'kimi-k2.5': {},
   },
-  headers: {
-    'user-agent': 'iFlow-Cli',
+  createModel(name, _provider, options) {
+    const apiKey = getProviderApiKey(iflowProvider);
+    const baseFetch = options.customFetch ?? fetch;
+    const customFetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      headers.set('user-agent', IFLOW_USER_AGENT);
+      const sessionId = `session-${randomUUID()}`;
+      const timestamp = Date.now();
+      headers.set('session-id', sessionId);
+      headers.set('x-iflow-timestamp', String(timestamp));
+      const signature = createIFlowSignature(
+        IFLOW_USER_AGENT,
+        sessionId,
+        timestamp,
+        apiKey,
+      );
+      if (signature) {
+        headers.set('x-iflow-signature', signature);
+      }
+      return baseFetch(url, {
+        ...init,
+        headers: Object.fromEntries(headers.entries()),
+      });
+    }) as typeof fetch;
+    return createModelCreator(name, iflowProvider, {
+      ...options,
+      customFetch,
+    });
   },
   middlewares: [mergeSystemMessagesMiddleware],
   interleaved: {
