@@ -11,6 +11,7 @@ type WorkspaceData = {
   repoPath: string;
   branch: string;
   worktreePath: string;
+  globalProjectDir: string;
   sessionIds: string[];
   gitState: {
     currentCommit: string;
@@ -91,6 +92,7 @@ async function buildWorkspaceData(
     repoPath: gitRoot,
     branch: worktree.branch,
     worktreePath: worktree.path,
+    globalProjectDir: worktreePaths.globalProjectDir,
     sessionIds,
     gitState: {
       currentCommit,
@@ -601,6 +603,7 @@ export function registerProjectHandlers(
           branch: 'default',
           worktreePath: cwd,
           sessionIds: context.paths.getAllSessions().map((s) => s.sessionId),
+          globalProjectDir: context.paths.globalProjectDir,
           gitState: {
             currentCommit: '',
             isDirty: false,
