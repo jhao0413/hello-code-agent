@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { parseArgs, type Plugin, runNeovate } from '../src/index';
 
 const HELLO_CODE_ASCII_ART = `
@@ -28,9 +29,15 @@ const helloCodePlugin: Plugin = {
           'claude-haiku-4-5': opts.models['claude-haiku-4-5'],
         },
         createModel(name, _provider) {
+          const apiKey = process.env.HELLO_CODE_API_KEY;
+          if (!apiKey) {
+            throw new Error(
+              'HELLO_CODE_API_KEY environment variable is required. Please set it in your .env file.',
+            );
+          }
           return opts
             .createAnthropic({
-              apiKey: process.env.HELLO_CODE_API_KEY || '',
+              apiKey,
               baseURL: process.env.HELLO_CODE_BASE_URL || undefined,
             })
             .chat(name);

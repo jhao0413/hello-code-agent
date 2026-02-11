@@ -1,0 +1,29 @@
+{
+  "name": "hello-code",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "HelloCode CLI - AI coding agent powered by Neovate",
+  "bin": {
+    "hello-code": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun build index.ts --outfile dist/index.js --target node --minify --external @neovate/code",
+    "build:standalone": "bun build index.ts --outfile dist/hello-code --target node --minify --compile",
+    "typecheck": "bun --bun tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "coding-agent",
+    "hello-code"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
