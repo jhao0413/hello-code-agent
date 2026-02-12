@@ -249,7 +249,7 @@ function ProductASCIIArt() {
     <Box>
       <GradientString
         text={productASCIIArt}
-        colors={['#FF3070', '#FF6B9D']}
+        colors={['#3B82F6', '#60A5FA']}
         multiline
       />
     </Box>
@@ -262,7 +262,7 @@ function ProductInfo() {
     <Box marginTop={1}>
       <GradientString
         text={productName.toUpperCase()}
-        colors={['#FF3070', '#FF6B9D']}
+        colors={['#3B82F6', '#60A5FA']}
         multiline
       />
       <Text color={UI_COLORS.PRODUCT_VERSION}> v{version}</Text>
