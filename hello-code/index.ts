@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { parseArgs, type Plugin, runNeovate } from '../src/index';
+import { type Plugin, parseArgs, runNeovate } from '../src/index';
+import { helloCodeProvider } from './provider';
 
 const HELLO_CODE_ASCII_ART = `
 █ █ █▀▀ █   █   █▀█   █▀▀ █▀█ █▀▄ █▀▀
@@ -9,43 +10,15 @@ const HELLO_CODE_ASCII_ART = `
 const helloCodePlugin: Plugin = {
   config({ config, argvConfig }) {
     return {
-      model: argvConfig.model || config.model || 'cc/claude-opus-4-5',
+      model: argvConfig.model || config.model || 'hello-code/kimi-k2.5',
       smallModel:
         argvConfig.smallModel ||
         config.smallModel ||
         argvConfig.model ||
-        'cc/claude-haiku-4-5',
+        'hello-code/kimi-k2.5',
     };
   },
-  provider(memo, opts) {
-    return {
-      cc: {
-        id: 'cc',
-        env: ['HELLO_CODE_API_KEY'],
-        name: 'cc',
-        doc: 'https://hello-code.com',
-        models: {
-          'claude-opus-4-5': opts.models['claude-opus-4-5'],
-          'claude-haiku-4-5': opts.models['claude-haiku-4-5'],
-        },
-        createModel(name, _provider) {
-          const apiKey = process.env.HELLO_CODE_API_KEY;
-          if (!apiKey) {
-            throw new Error(
-              'HELLO_CODE_API_KEY environment variable is required. Please set it in your .env file.',
-            );
-          }
-          return opts
-            .createAnthropic({
-              apiKey,
-              baseURL: process.env.HELLO_CODE_BASE_URL || undefined,
-            })
-            .chat(name);
-        },
-      },
-      ...memo,
-    };
-  },
+  provider: helloCodeProvider,
 };
 
 const argv = await parseArgs(process.argv.slice(2));
