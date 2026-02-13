@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { type Plugin, parseArgs, runNeovate } from '../src/index';
 import { helloCodeProvider } from './provider';
+import { createHelloCodeSlashCommands } from './slash-command';
 
 const HELLO_CODE_ASCII_ART = `
 █ █ █▀▀ █   █   █▀█   █▀▀ █▀█ █▀▄ █▀▀
@@ -19,6 +20,9 @@ const helloCodePlugin: Plugin = {
     };
   },
   provider: helloCodeProvider,
+  slashCommand() {
+    return createHelloCodeSlashCommands();
+  },
 };
 
 const argv = await parseArgs(process.argv.slice(2));
