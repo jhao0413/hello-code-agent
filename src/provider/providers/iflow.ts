@@ -33,12 +33,13 @@ export const iflowProvider: Provider = {
     'deepseek-r1': {},
     'glm-4.6': {},
     'glm-4.7': {},
+    'glm-5': {},
     'minimax-m2.1': {},
     'qwen3-max': {},
     'kimi-k2.5': {},
   },
   createModel(name, _provider, options) {
-    const apiKey = getProviderApiKey(iflowProvider);
+    const apiKey = getProviderApiKey(_provider);
     const baseFetch = options.customFetch ?? fetch;
     const customFetch = (async (url: RequestInfo | URL, init?: RequestInit) => {
       const headers = new Headers(init?.headers);
@@ -61,7 +62,7 @@ export const iflowProvider: Provider = {
         headers: Object.fromEntries(headers.entries()),
       });
     }) as typeof fetch;
-    return createModelCreator(name, iflowProvider, {
+    return createModelCreator(name, _provider, {
       ...options,
       customFetch,
     });
