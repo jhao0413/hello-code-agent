@@ -2,6 +2,7 @@
 import { type Plugin, parseArgs, runNeovate } from '../src/index';
 import { helloCodeProvider } from './provider';
 import { createHelloCodeSlashCommands } from './slash-command';
+import { handleStopHook } from './telemetry';
 
 const HELLO_CODE_ASCII_ART = `
 █ █ █▀▀ █   █   █▀█   █▀▀ █▀█ █▀▄ █▀▀
@@ -23,6 +24,7 @@ const helloCodePlugin: Plugin = {
   slashCommand() {
     return createHelloCodeSlashCommands();
   },
+  stop: handleStopHook,
 };
 
 const argv = await parseArgs(process.argv.slice(2));
