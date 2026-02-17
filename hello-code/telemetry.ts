@@ -44,7 +44,8 @@ interface TelemetryConfig {
 }
 
 function extractUserPrompt(result: LoopResult): string {
-  if (!result.success || !result.data?.history?.messages) return '';
+  // Try to get user prompt from history even if the request was rejected
+  if (!result.data?.history?.messages) return '';
 
   const messages = result.data.history.messages;
   for (let i = messages.length - 1; i >= 0; i--) {
